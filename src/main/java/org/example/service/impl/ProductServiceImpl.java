@@ -13,6 +13,7 @@ import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @AllArgsConstructor
 @Service
@@ -68,5 +69,40 @@ public class ProductServiceImpl implements ProductService {
                 Product.class
         );
         return products;
+    }
+
+    @Override
+    public List<Product> findByCategory(HttpSession session, String category) {
+        return List.of();
+    }
+
+    @Override
+    public List<Product> findByPriceRange(HttpSession session, double minPrice, double maxPrice) {
+        return List.of();
+    }
+
+    @Override
+    public List<Product> findLowStockProducts(HttpSession session, int threshold) {
+        return List.of();
+    }
+
+    @Override
+    public Map<String, Object> getCategoryStats(HttpSession session) {
+        return Map.of();
+    }
+
+    @Override
+    public List<Map<String, Object>> getAveragePriceByCategory(HttpSession session) {
+        return List.of();
+    }
+
+    @Override
+    public double getTotalInventoryValue(HttpSession session) {
+        return 0;
+    }
+
+    @Override
+    public List<Product> fullTextSearch(HttpSession session, String searchText) {
+        return List.of();
     }
 }

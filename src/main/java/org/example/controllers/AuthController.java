@@ -3,6 +3,7 @@ package org.example.controllers;
 import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.example.dto.AuthDTO;
 import org.example.service.AuthService;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/auth")
 @Data
@@ -20,7 +22,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public String login(@RequestBody AuthDTO authDTO, HttpSession session) {
-
+        log.info(authDTO.toString());
         MongoTemplate mongoTemplate = authService.login(authDTO);
 
         session.setAttribute("MongoTemplate", mongoTemplate);

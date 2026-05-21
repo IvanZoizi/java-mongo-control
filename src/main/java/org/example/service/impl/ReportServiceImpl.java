@@ -27,11 +27,11 @@ public class ReportServiceImpl implements ReportService {
         MongoTemplate mongoTemplate = sessionService.getMongoTemplateBySession(session);
 
         GroupOperation groupByStatus = Aggregation.group("status")
-                .count().as("count")                    // Количество заказов
-                .sum("totalAmount").as("totalSum")      // Сумма всех заказов
-                .avg("totalAmount").as("averageAmount") // Средняя сумма заказа
-                .min("totalAmount").as("minAmount")     // Минимальная сумма
-                .max("totalAmount").as("maxAmount");    // Максимальная сумма
+                .count().as("count")
+                .sum("totalAmount").as("totalSum")
+                .avg("totalAmount").as("averageAmount")
+                .min("totalAmount").as("minAmount")
+                .max("totalAmount").as("maxAmount");
 
         SortOperation sortBySum = Aggregation.sort(Sort.Direction.DESC, "totalSum");
 
@@ -40,38 +40,28 @@ public class ReportServiceImpl implements ReportService {
         return mongoTemplate.aggregate(aggregation, "orders", Map.class).getMappedResults();
     }
 
-    /**
-     * Отчет 2: Топ продуктов по продажам (с join)
-     * Агрегация: $lookup, $unwind, $group, $sort, $limit
-     */
     @Override
-    public List<Map<String, Object>> getTopSellingProducts(HttpSession session, int limit) {
-        MongoTemplate mongoTemplate = sessionService.getFromSession(session);
+    public List<Map> getTopSellingProducts(HttpSession session, int limit) {
+        MongoTemplate mongoTemplate = sessionService.getMongoTemplateBySession(session);
 
-        // Этап 1: Join с коллекцией products
         LookupOperation lookupProducts = LookupOperation.newLookup()
-                .from("products")           // Коллекция для join
-                .localField("productSku")   // Поле в orders
-                .foreignField("sku")        // Поле в products
-                .as("productInfo");         // Имя результирующего массива
+                .from("products")
+                .localField("productSku")
+                .foreignField("sku")
+                .as("productInfo");
 
-        // Этап 2: Разворачиваем массив (превращаем в объект)
         UnwindOperation unwindProducts = Aggregation.unwind("productInfo");
 
-        // Этап 3: Группировка по продукту
         GroupOperation groupByProduct = Aggregation.group("productInfo.sku", "productInfo.name")
-                .sum("quantity").as("totalSold")           // Общее количество продаж
-                .sum("totalAmount").as("totalRevenue")     // Общая выручка
-                .avg("productInfo.price").as("avgPrice")   // Средняя цена продукта
-                .first("productInfo.category").as("category"); // Категория
+                .sum("quantity").as("totalSold")
+                .sum("totalAmount").as("totalRevenue")
+                .avg("productInfo.price").as("avgPrice")
+                .first("productInfo.category").as("category");
 
-        // Этап 4: Сортировка по количеству продаж (убывание)
         SortOperation sortBySold = Aggregation.sort(Sort.Direction.DESC, "totalSold");
 
-        // Этап 5: Ограничение количества результатов
         LimitOperation limitResults = Aggregation.limit(limit);
 
-        // Этап 6: Проекция для красивых имен полей
         ProjectionOperation project = Aggregation.project()
                 .and("_id.sku").as("sku")
                 .and("_id.name").as("productName")
@@ -80,7 +70,6 @@ public class ReportServiceImpl implements ReportService {
                 .and("avgPrice").as("averagePrice")
                 .and("category").as("category");
 
-        // Собираем все этапы
         Aggregation aggregation = Aggregation.newAggregation(
                 lookupProducts,
                 unwindProducts,
@@ -93,25 +82,19 @@ public class ReportServiceImpl implements ReportService {
         return mongoTemplate.aggregate(aggregation, "orders", Map.class).getMappedResults();
     }
 
-    /**
-     * Отчет 3: Статистика по категориям товаров
-     * Агрегация: $group, $avg, $sum, $min, $max
-     */
     @Override
-    public List<Map<String, Object>> getProductStatsByCategory(HttpSession session) {
-        MongoTemplate mongoTemplate = sessionService.getFromSession(session);
+    public List<Map> getProductStatsByCategory(HttpSession session) {
+        MongoTemplate mongoTemplate = sessionService.getMongoTemplateBySession(session);
 
-        // Группировка по категориям с различными агрегатными функциями
         GroupOperation groupByCategory = Aggregation.group("category")
-                .count().as("productCount")              // Количество товаров
-                .avg("price").as("averagePrice")         // Средняя цена
-                .sum("stock").as("totalStock")           // Общий остаток
-                .min("price").as("minPrice")             // Минимальная цена
-                .max("price").as("maxPrice")             // Максимальная цена
+                .count().as("productCount")
+                .avg("price").as("averagePrice")
+                .sum("stock").as("totalStock")
+                .min("price").as("minPrice")
+                .max("price").as("maxPrice")
                 .sum(ArithmeticOperators.Multiply.valueOf("price").multiplyBy("stock"))
-                .as("totalValue");                   // Общая стоимость на складе
+                .as("totalValue");
 
-        // Сортировка по количеству товаров
         SortOperation sortByCount = Aggregation.sort(Sort.Direction.DESC, "productCount");
 
         Aggregation aggregation = Aggregation.newAggregation(groupByCategory, sortByCount);
@@ -119,33 +102,25 @@ public class ReportServiceImpl implements ReportService {
         return mongoTemplate.aggregate(aggregation, "products", Map.class).getMappedResults();
     }
 
-    /**
-     * Отчет 4: Ежемесячные продажи (с извлечением даты)
-     * Агрегация: $project, $month, $year, $group
-     */
     @Override
-    public List<Map<String, Object>> getMonthlySalesReport(HttpSession session, int year) {
-        MongoTemplate mongoTemplate = sessionService.getFromSession(session);
+    public List<Map> getMonthlySalesReport(HttpSession session, int year) {
+        MongoTemplate mongoTemplate = sessionService.getMongoTemplateBySession(session);
 
-        // Этап 1: Проекция с извлечением месяца и года из даты
         ProjectionOperation extractDateParts = Aggregation.project()
                 .and("totalAmount").as("totalAmount")
                 .and("orderDate").extractMonth().as("month")
                 .and("orderDate").extractYear().as("year")
                 .and("status").as("status");
 
-        // Этап 2: Фильтрация по году
         MatchOperation filterByYear = Aggregation.match(
                 Criteria.where("year").is(year).and("status").ne("Отменен")
         );
 
-        // Этап 3: Группировка по месяцам
         GroupOperation groupByMonth = Aggregation.group("month")
                 .sum("totalAmount").as("monthlyRevenue")
                 .count().as("orderCount")
                 .avg("totalAmount").as("averageOrderValue");
 
-        // Этап 4: Сортировка по месяцу
         SortOperation sortByMonth = Aggregation.sort(Sort.Direction.ASC, "_id");
 
         Aggregation aggregation = Aggregation.newAggregation(
@@ -158,25 +133,18 @@ public class ReportServiceImpl implements ReportService {
         return mongoTemplate.aggregate(aggregation, "orders", Map.class).getMappedResults();
     }
 
-    /**
-     * Отчет 5: Топ покупателей
-     * Агрегация: $group по userId, $sum, $sort, $limit
-     */
     @Override
-    public List<Map<String, Object>> getTopCustomers(HttpSession session, int limit) {
-        MongoTemplate mongoTemplate = sessionService.getFromSession(session);
+    public List<Map>getTopCustomers(HttpSession session, int limit) {
+        MongoTemplate mongoTemplate = sessionService.getMongoTemplateBySession(session);
 
-        // Группировка по пользователям
         GroupOperation groupByUser = Aggregation.group("userId")
                 .sum("totalAmount").as("totalSpent")
                 .count().as("orderCount")
                 .avg("totalAmount").as("averageOrder")
                 .max("totalAmount").as("maxOrder");
 
-        // Сортировка по общей сумме
         SortOperation sortBySpent = Aggregation.sort(Sort.Direction.DESC, "totalSpent");
 
-        // Лимит результатов
         LimitOperation limitResults = Aggregation.limit(limit);
 
         Aggregation aggregation = Aggregation.newAggregation(
@@ -188,16 +156,10 @@ public class ReportServiceImpl implements ReportService {
         return mongoTemplate.aggregate(aggregation, "orders", Map.class).getMappedResults();
     }
 
-    // ========== ПРОСТЫЕ ЗАПРОСЫ ==========
-
-    /**
-     * Простой запрос 1: Поиск товаров в ценовом диапазоне
-     */
     @Override
     public List<Product> findProductsByPriceRange(HttpSession session, double minPrice, double maxPrice) {
-        MongoTemplate mongoTemplate = sessionService.getFromSession(session);
+        MongoTemplate mongoTemplate = sessionService.getMongoTemplateBySession(session);
 
-        // Создаем простой запрос с условиями
         Query query = new Query();
         query.addCriteria(Criteria.where("price").gte(minPrice).lte(maxPrice));
         query.with(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.ASC, "price"));
@@ -205,18 +167,13 @@ public class ReportServiceImpl implements ReportService {
         return mongoTemplate.find(query, Product.class, "products");
     }
 
-    /**
-     * Простой запрос 2: Поиск заказов за период
-     */
     @Override
     public List<Orders> findOrdersByDateRange(HttpSession session, String startDate, String endDate) {
-        MongoTemplate mongoTemplate = sessionService.getFromSession(session);
+        MongoTemplate mongoTemplate = sessionService.getMongoTemplateBySession(session);
 
-        // Парсим даты
         Date start = java.sql.Date.valueOf(startDate);
         Date end = java.sql.Date.valueOf(endDate);
 
-        // Простой запрос с диапазоном дат
         Query query = new Query();
         query.addCriteria(Criteria.where("orderDate").gte(start).lte(end));
         query.with(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "orderDate"));
@@ -226,15 +183,13 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public Map<String, Object> getUserOrdersSummary(HttpSession session, int userId) {
-        MongoTemplate mongoTemplate = sessionService.getFromSession(session);
+        MongoTemplate mongoTemplate = sessionService.getMongoTemplateBySession(session);
 
-        // Простой запрос - находим все заказы пользователя
         Query query = new Query();
         query.addCriteria(Criteria.where("userId").is(userId));
 
         List<Orders> userOrders = mongoTemplate.find(query, Orders.class, "orders");
 
-        // Группировка на уровне приложения (простая, без агрегации MongoDB)
         Map<String, Object> summary = new HashMap<>();
         Map<String, List<Orders>> ordersByStatus = new HashMap<>();
 
@@ -242,7 +197,6 @@ public class ReportServiceImpl implements ReportService {
         for (Orders order : userOrders) {
             totalSpent += order.getTotalAmount();
 
-            // Группируем по статусу
             ordersByStatus.computeIfAbsent(order.getStatus(), k -> new ArrayList<>()).add(order);
         }
 
@@ -258,7 +212,7 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<Orders> findOrdersByStatus(HttpSession session, String status) {
-        MongoTemplate mongoTemplate = sessionService.getFromSession(session);
+        MongoTemplate mongoTemplate = sessionService.getMongoTemplateBySession(session);
 
         Query query = new Query();
         query.addCriteria(Criteria.where("status").is(status));
@@ -269,7 +223,7 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<Product> findProductsByCategorySortedByPrice(HttpSession session, String category) {
-        MongoTemplate mongoTemplate = sessionService.getFromSession(session);
+        MongoTemplate mongoTemplate = sessionService.getMongoTemplateBySession(session);
 
         Query query = new Query();
         query.addCriteria(Criteria.where("category").is(category));
@@ -278,20 +232,4 @@ public class ReportServiceImpl implements ReportService {
         return mongoTemplate.find(query, Product.class, "products");
     }
 
-    @Override
-    public List<Product> fullTextSearch(HttpSession session, String searchText) {
-        MongoTemplate mongoTemplate = sessionService.getFromSession(session);
-
-        // Создаем regex для поиска (регистронезависимый)
-        Pattern pattern = Pattern.compile(searchText, Pattern.CASE_INSENSITIVE);
-
-        Query query = new Query();
-        query.addCriteria(new Criteria().orOperator(
-                Criteria.where("name").regex(pattern),
-                Criteria.where("description").regex(pattern),
-                Criteria.where("category").regex(pattern)
-        ));
-
-        return mongoTemplate.find(query, Product.class, "products");
-    }
 }
