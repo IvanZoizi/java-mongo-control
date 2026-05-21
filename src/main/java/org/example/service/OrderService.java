@@ -1,24 +1,19 @@
 package org.example.service;
 
 import jakarta.servlet.http.HttpSession;
+import org.example.dto.OrderDTO;
 import org.example.entity.Orders;
 import java.util.List;
 import java.util.Map;
 
 public interface OrderService {
 
-    // Существующие методы (из вашего предыдущего задания)
     List<Orders> findAll(HttpSession session);
     Orders findById(HttpSession session, String id);
-    Orders save(HttpSession session, Orders order);
+    Orders save(HttpSession session, OrderDTO order);
     void delete(HttpSession session, String id);
 
-    // ===== ДОПОЛНИТЕЛЬНЫЕ МЕТОДЫ ДЛЯ ОТЧЕТОВ =====
-
-    /**
-     * Поиск заказов по пользователю
-     */
-    List<Orders> findByUserId(HttpSession session, int userId);
+    List<Orders> findByUserId(HttpSession session, Integer userId);
 
     /**
      * Поиск заказов по статусу

@@ -49,7 +49,8 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
         }
 
         String role = (String) session.getAttribute("Role");
-
+        System.out.println(role);
+        log.info(role);
         if (!checkAccess(method, role)) {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType("application/json");
@@ -66,8 +67,8 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
         }
 
         if (method.equals("PUT") || method.equals("PATCH")) {
-            return role.equals("admin") || role.equals("editor");
-        } else if (role.equals("admin")) {
+            return role.equals("ADMIN") || role.equals("EDITOR");
+        } else if (role.equals("ADMIN")) {
             return true;
         }
 

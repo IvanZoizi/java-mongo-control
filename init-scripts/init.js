@@ -27,11 +27,11 @@ db.products.insertMany([
 ]);
 
 db.orders.insertMany([
-  { orderId: "ORD-001", userId: 1, productSku: "PRD-001", quantity: 1, totalAmount: 45000, status: "Доставлен", orderDate: new Date("2024-01-15") },
-  { orderId: "ORD-002", userId: 2, productSku: "PRD-002", quantity: 2, totalAmount: 3000, status: "В обработке", orderDate: new Date("2024-01-20") },
-  { orderId: "ORD-003", userId: 1, productSku: "PRD-004", quantity: 1, totalAmount: 35000, status: "Доставлен", orderDate: new Date("2024-02-01") },
-  { orderId: "ORD-004", userId: 3, productSku: "PRD-003", quantity: 3, totalAmount: 2400, status: "Отменен", orderDate: new Date("2024-02-10") },
-  { orderId: "ORD-005", userId: 2, productSku: "PRD-005", quantity: 1, totalAmount: 8000, status: "В пути", orderDate: new Date("2024-02-15") }
+  { orderId: "ORD-001", userId: 1, productSku: "PRD-001", quantity: 1, totalAmount: 45000, status: "Доставлен", orderDate: new Date("2026-01-15") },
+  { orderId: "ORD-002", userId: 2, productSku: "PRD-002", quantity: 2, totalAmount: 3000, status: "В обработке", orderDate: new Date("2026-01-20") },
+  { orderId: "ORD-003", userId: 1, productSku: "PRD-004", quantity: 1, totalAmount: 35000, status: "Доставлен", orderDate: new Date("2026-02-01") },
+  { orderId: "ORD-004", userId: 3, productSku: "PRD-003", quantity: 3, totalAmount: 2400, status: "Отменен", orderDate: new Date("2026-02-10") },
+  { orderId: "ORD-005", userId: 2, productSku: "PRD-005", quantity: 1, totalAmount: 8000, status: "В пути", orderDate: new Date("2026-02-15") }
 ]);
 
 // Создаем пользователей с разными ролями
@@ -48,7 +48,7 @@ db.users.insertMany([
     email: "editor@example.com",
     password: "editor123",
     role: "EDITOR",
-    permissions: ["READ", "UPDATE"]
+    permissions: ["READ", "CREATE"]
   },
   {
     username: "viewer",

@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление заказами</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100%;
+            background: #1a1a1a;
+            color: #ffffff;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 30px 20px;
+            border-bottom: 1px solid #333333;
+        }
+
+        .sidebar-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: #999999;
+            margin-top: 8px;
+        }
+
+        .user-info {
+            padding: 20px;
+            background: #252525;
+            margin: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .user-info .username {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .user-info .role {
+            font-size: 12px;
+            color: #aaaaaa;
+            text-transform: uppercase;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0 15px;
+        }
+
+        .nav-item {
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: #dddddd;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .nav-link:hover {
+            background: #333333;
+            color: #ffffff;
+        }
+
+        .nav-link.active {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .logout-btn {
+            position: absolute;
+            bottom: 30px;
+            left: 15px;
+            right: 15px;
+            background: #333333;
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #c62828;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 30px;
+        }
+
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #333333;
+        }
+
+        .btn-danger {
+            background: #c62828;
+            color: #ffffff;
+        }
+
+        .btn-danger:hover {
+            background: #b71c1c;
+        }
+
+        .btn-secondary {
+            background: #666666;
+            color: #ffffff;
+        }
+
+        .btn-success {
+            background: #2e7d32;
+            color: #ffffff;
+        }
+
+        .btn-success:hover {
+            background: #1b5e20;
+        }
+
+        .filters {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #666666;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #cccccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .table-container {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eeeeee;
+        }
+
+        th {
+            font-weight: 600;
+            color: #333333;
+            background: #fafafa;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background: #f0f0f0;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-completed { background: #e8f5e9; color: #2e7d32; }
+        .status-pending { background: #fff3e0; color: #ef6c00; }
+        .status-processing { background: #e3f2fd; color: #1565c0; }
+        .status-cancelled { background: #ffebee; color: #c62828; }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-buttons button {
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            font-size: 24px;
+            cursor: pointer;
+            color: #999999;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cccccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #999999;
+        }
+
+        .role-restricted {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #cccccc;
+            background: #ffffff;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .pagination button:hover {
+            background: #f0f0f0;
+        }
+
+        .pagination button.active {
+            background: #000000;
+            color: #ffffff;
+            border-color: #000000;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h2>Система<br>Управления</h2>
+        <p>Enterprise Dashboard</p>
+    </div>
+
+    <div class="user-info">
+        <div class="username" th:text="${username}">User</div>
+        <div class="role" th:text="${role}" id="userRole">Role</div>
+    </div>
+
+    <ul class="nav-menu">
+        <li class="nav-item">
+            <a href="/dashboard" class="nav-link">
+                <span class="nav-icon">📊</span>
+                <span>Дашборд</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/products" class="nav-link">
+                <span class="nav-icon">📦</span>
+                <span>Товары</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/orders" class="nav-link active">
+                <span class="nav-icon">🛒</span>
+                <span>Заказы</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/reports" class="nav-link">
+                <span class="nav-icon">📈</span>
+                <span>Отчеты</span>
+            </a>
+        </li>
+    </ul>
+
+    <button class="logout-btn" onclick="logout()">🚪 Выйти</button>
+</div>
+
+<div class="main-content">
+    <div class="main-header">
+        <h1 class="page-title">Управление заказами</h1>
+        <div class="header-actions">
+            <button class="btn btn-primary" id="addOrderBtn" onclick="showAddModal()">+ Создать заказ</button>
+            <button class="btn btn-secondary" onclick="exportOrders()">📥 Экспорт</button>
+        </div>
+    </div>
+
+    <div id="roleWarning" style="display: none;" class="role-restricted">
+        ⚠️ Ваша роль не позволяет создавать, редактировать или удалять заказы
+    </div>
+
+    <div class="filters">
+        <div class="filter-group">
+            <label>Статус</label>
+            <select id="statusFilter" onchange="applyFilters()">
+                <option value="">Все статусы</option>
+                <option value="Ожидает">Ожидает</option>
+                <option value="В обработке">В обработке</option>
+                <option value="Доставлен">Доставлен</option>
+                <option value="Отменен">Отменен</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Дата от</label>
+            <input type="date" id="dateFrom" onchange="applyFilters()">
+        </div>
+        <div class="filter-group">
+            <label>Дата до</label>
+            <input type="date" id="dateTo" onchange="applyFilters()">
+        </div>
+        <div class="filter-group">
+            <label>Поиск по ID заказа</label>
+            <input type="text" id="searchOrderId" placeholder="Введите ID заказа..." oninput="applyFilters()">
+        </div>
+        <div class="filter-group">
+            <label>&nbsp;</label>
+            <button class="btn btn-secondary" onclick="resetFilters()">Сбросить</button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div id="ordersTable">
+            <div class="loading">Загрузка...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal для создания/редактирования заказа -->
+<div id="orderModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Создать заказ</h2>
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+        </div>
+        <form id="orderForm">
+            <input type="hidden" id="orderId">
+            <div class="form-group">
+                <label>ID заказа *</label>
+                <input type="text" id="orderIdField" required placeholder="ORD-001">
+            </div>
+            <div class="form-group">
+                <label>ID пользователя *</label>
+                <input type="number" id="userId" required>
+            </div>
+            <div class="form-group">
+                <label>SKU товара *</label>
+                <input type="text" id="productSku" required>
+            </div>
+            <div class="form-group">
+                <label>Количество *</label>
+                <input type="number" id="quantity" required min="1">
+            </div>
+            <div class="form-group">
+                <label>Статус</label>
+                <select id="status">
+                    <option value="Ожидает">Ожидает</option>
+                    <option value="В обработке">В обработке</option>
+                    <option value="Доставлен">Доставлен</option>
+                    <option value="Отменен">Отменен</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Дата заказа</label>
+                <input type="datetime-local" id="orderDate">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let allOrders = [];
+    let currentUserRole = document.getElementById('userRole').innerText.trim().toLowerCase();
+    let canWrite = currentUserRole === 'admin' || currentUserRole === 'editor';
+
+    if (!canWrite) {
+        document.getElementById('addOrderBtn').style.display = 'none';
+        document.getElementById('roleWarning').style.display = 'block';
+    }
+
+    async function loadOrders() {
+        try {
+            const response = await fetch('/orders/all');
+            if (response.ok) {
+                allOrders = await response.json();
+            } else {
+                allOrders = getDemoOrders();
+            }
+            applyFilters();
+        } catch (error) {
+            console.error('Error loading orders:', error);
+            allOrders = getDemoOrders();
+            applyFilters();
+        }
+    }
+
+    function getDemoOrders() {
+        return [
+            { id: '1', orderId: 'ORD-001', userId: 1, productSku: 'SKU-001', quantity: 2, totalAmount: 5000, status: 'Доставлен', orderDate: '2024-01-15T10:00:00' },
+            { id: '2', orderId: 'ORD-002', userId: 2, productSku: 'SKU-002', quantity: 1, totalAmount: 3000, status: 'В обработке', orderDate: '2024-01-20T14:30:00' },
+            { id: '3', orderId: 'ORD-003', userId: 1, productSku: 'SKU-003', quantity: 3, totalAmount: 12000, status: 'Ожидает', orderDate: '2024-01-25T09:15:00' },
+            { id: '4', orderId: 'ORD-004', userId: 3, productSku: 'SKU-001', quantity: 1, totalAmount: 2500, status: 'Отменен', orderDate: '2024-02-01T16:45:00' }
+        ];
+    }
+
+    function applyFilters() {
+        const status = document.getElementById('statusFilter').value;
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        const searchId = document.getElementById('searchOrderId').value.toLowerCase();
+
+        let filtered = [...allOrders];
+
+        if (status) {
+            filtered = filtered.filter(o => o.status === status);
+        }
+
+        if (dateFrom) {
+            filtered = filtered.filter(o => o.orderDate >= dateFrom);
+        }
+
+        if (dateTo) {
+            filtered = filtered.filter(o => o.orderDate <= dateTo + 'T23:59:59');
+        }
+
+        if (searchId) {
+            filtered = filtered.filter(o => o.orderId.toLowerCase().includes(searchId));
+        }
+
+        renderOrdersTable(filtered);
+    }
+
+    function resetFilters() {
+        document.getElementById('statusFilter').value = '';
+        document.getElementById('dateFrom').value = '';
+        document.getElementById('dateTo').value = '';
+        document.getElementById('searchOrderId').value = '';
+        applyFilters();
+    }
+
+    function renderOrdersTable(orders) {
+        const container = document.getElementById('ordersTable');
+
+        if (!orders.length) {
+            container.innerHTML = '<div class="loading">Нет заказов</div>';
+            return;
+        }
+
+        container.innerHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th onclick="sortBy('orderId')">ID заказа ${getSortIcon('orderId')}</th>
+                        <th onclick="sortBy('userId')">ID пользователя ${getSortIcon('userId')}</th>
+                        <th>SKU товара</th>
+                        <th onclick="sortBy('quantity')">Кол-во ${getSortIcon('quantity')}</th>
+                        <th onclick="sortBy('totalAmount')">Сумма ${getSortIcon('totalAmount')}</th>
+                        <th>Статус</th>
+                        <th onclick="sortBy('orderDate')">Дата ${getSortIcon('orderDate')}</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${orders.map(order => `
+                        <tr>
+                            <td>${order.orderId}</td>
+                            <td>${order.userId}</td>
+                            <td>${order.productSku}</td>
+                            <td>${order.quantity}</td>
+                            <td>${(order.totalAmount || order.quantity * 2500).toLocaleString()} ₽</td>
+                            <td><span class="status-badge status-${getStatusClass(order.status)}">${order.status}</span></td>
+                            <td>${formatDate(order.orderDate)}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-secondary" onclick="viewOrder('${order.id}')">👁️</button>
+                                    ${canWrite && currentUserRole === 'admin' ? `<button class="btn btn-danger" onclick="deleteOrder('${order.id}')">🗑️</button>` : ''}
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    let sortField = 'orderDate';
+    let sortDirection = 'desc';
+
+    function sortBy(field) {
+        if (sortField === field) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortField = field;
+            sortDirection = 'asc';
+        }
+
+        allOrders.sort((a, b) => {
+            let valA = a[field];
+            let valB = b[field];
+            if (typeof valA === 'string') valA = valA.toLowerCase();
+            if (typeof valB === 'string') valB = valB.toLowerCase();
+            if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+            if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+        applyFilters();
+    }
+
+    function getSortIcon(field) {
+        if (sortField !== field) return '↕️';
+        return sortDirection === 'asc' ? '↑' : '↓';
+    }
+
+    function getStatusClass(status) {
+        const map = {
+            'Доставлен': 'completed',
+            'Ожидает': 'pending',
+            'В обработке': 'processing',
+            'Отменен': 'cancelled'
+        };
+        return map[status] || 'pending';
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        return new Date(dateStr).toLocaleString('ru-RU');
+    }
+
+    function showAddModal() {
+        if (!canWrite) return;
+        document.getElementById('modalTitle').innerText = 'Создать заказ';
+        document.getElementById('orderForm').reset();
+        document.getElementById('orderId').value = '';
+        document.getElementById('orderDate').value = new Date().toISOString().slice(0, 16);
+        document.getElementById('orderModal').style.display = 'flex';
+    }
+
+    function editOrder(id) {
+        if (!canWrite) return;
+        const order = allOrders.find(o => o.id === id);
+        if (!order) return;
+
+        document.getElementById('modalTitle').innerText = 'Редактировать заказ';
+        document.getElementById('orderId').value = order.id;
+        document.getElementById('orderIdField').value = order.orderId;
+        document.getElementById('userId').value = order.userId;
+        document.getElementById('productSku').value = order.productSku;
+        document.getElementById('quantity').value = order.quantity;
+        document.getElementById('status').value = order.status;
+        document.getElementById('orderDate').value = order.orderDate?.slice(0, 16) || '';
+        document.getElementById('orderModal').style.display = 'flex';
+    }
+
+    function viewOrder(id) {
+        const order = allOrders.find(o => o.id === id);
+        if (order) {
+            alert(`Заказ ${order.orderId}\nПользователь: ${order.userId}\nТовар: ${order.productSku}\nКол-во: ${order.quantity}\nСумма: ${order.totalAmount} ₽\nСтатус: ${order.status}`);
+        }
+    }
+
+    async function deleteOrder(id) {
+        if (!canWrite || currentUserRole !== 'admin') return;
+        if (confirm('Удалить заказ?')) {
+            try {
+                const response = await fetch(`/orders/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    await loadOrders();
+                } else {
+                    alert('Ошибка при удалении заказа');
+                }
+            } catch (error) {
+                console.error('Error deleting order:', error);
+                alert('Ошибка при удалении заказа');
+            }
+        }
+    }
+
+    document.getElementById('orderForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const orderId = document.getElementById('orderId').value;
+        const orderData = {
+            orderId: document.getElementById('orderIdField').value,
+            userId: parseInt(document.getElementById('userId').value),
+            productSku: document.getElementById('productSku').value,
+            quantity: parseInt(document.getElementById('quantity').value),
+            totalAmount: 0,
+            status: document.getElementById('status').value,
+            orderDate: document.getElementById('orderDate').value ? new Date(document.getElementById('orderDate').value).toISOString() : new Date().toISOString()
+        };
+
+        try {
+            const productResponse = await fetch(`/report/products/price-range?min=0&max=1000000`);
+            const products = await productResponse.json();
+            const product = products.find(p => p.sku === orderData.productSku);
+
+            if (product) {
+                orderData.totalAmount = product.price * orderData.quantity;
+            } else {
+                orderData.totalAmount = orderData.quantity * 1000;
+            }
+
+            let response;
+            if (orderId) {
+                response = await fetch(`/orders/${orderId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+            } else {
+                response = await fetch('/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+            }
+
+            if (response.ok) {
+                closeModal();
+                await loadOrders();
+            } else {
+                const error = await response.text();
+                alert('Ошибка при сохранении заказа: ' + error);
+            }
+        } catch (error) {
+            console.error('Error saving order:', error);
+            alert('Ошибка при сохранении заказа');
+        }
+    });
+
+    function closeModal() {
+        document.getElementById('orderModal').style.display = 'none';
+    }
+
+    function exportOrders() {
+        const dataStr = JSON.stringify(allOrders, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `orders_${new Date().toISOString().slice(0, 19)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    async function logout() {
+        await fetch('/auth/logout', { method: 'POST' });
+        window.location.href = '/login';
+    }
+
+    loadOrders();
+</script>
+</body>
+</html>

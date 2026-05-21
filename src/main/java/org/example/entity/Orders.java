@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
 
-@Document(collection = "orders")  // Было "collation", исправлено на "collection"
+@Document(collection = "orders")
 @Data
 @NoArgsConstructor
 public class Orders {

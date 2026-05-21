@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отчеты и аналитика</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100%;
+            background: #1a1a1a;
+            color: #ffffff;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 30px 20px;
+            border-bottom: 1px solid #333333;
+        }
+
+        .sidebar-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: #999999;
+            margin-top: 8px;
+        }
+
+        .user-info {
+            padding: 20px;
+            background: #252525;
+            margin: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .user-info .username {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .user-info .role {
+            font-size: 12px;
+            color: #aaaaaa;
+            text-transform: uppercase;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0 15px;
+        }
+
+        .nav-item {
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: #dddddd;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .nav-link:hover {
+            background: #333333;
+            color: #ffffff;
+        }
+
+        .nav-link.active {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .logout-btn {
+            position: absolute;
+            bottom: 30px;
+            left: 15px;
+            right: 15px;
+            background: #333333;
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #c62828;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 30px;
+        }
+
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #333333;
+        }
+
+        .btn-secondary {
+            background: #666666;
+            color: #ffffff;
+        }
+
+        .btn-success {
+            background: #2e7d32;
+            color: #ffffff;
+        }
+
+        .report-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: #ffffff;
+            border: 1px solid #cccccc;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: #000000;
+            color: #ffffff;
+            border-color: #000000;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .report-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .report-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .report-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .report-controls select,
+        .report-controls input {
+            padding: 8px 12px;
+            border: 1px solid #cccccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .chart-container {
+            height: 350px;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .stat-box .label {
+            font-size: 12px;
+            color: #666666;
+            margin-bottom: 5px;
+        }
+
+        .stat-box .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #000000;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eeeeee;
+        }
+
+        .data-table th {
+            background: #fafafa;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999999;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h2>Система<br>Управления</h2>
+        <p>Enterprise Dashboard</p>
+    </div>
+
+    <div class="user-info">
+        <div class="username" th:text="${username}">User</div>
+        <div class="role" th:text="${role}">Role</div>
+    </div>
+
+    <ul class="nav-menu">
+        <li class="nav-item">
+            <a href="/dashboard" class="nav-link">
+                <span class="nav-icon">📊</span>
+                <span>Дашборд</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/products" class="nav-link">
+                <span class="nav-icon">📦</span>
+                <span>Товары</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/orders" class="nav-link">
+                <span class="nav-icon">🛒</span>
+                <span>Заказы</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/reports" class="nav-link active">
+                <span class="nav-icon">📈</span>
+                <span>Отчеты</span>
+            </a>
+        </li>
+    </ul>
+
+    <button class="logout-btn" onclick="logout()">🚪 Выйти</button>
+</div>
+
+<div class="main-content">
+    <div class="main-header">
+        <h1 class="page-title">Отчеты и аналитика</h1>
+        <div>
+            <button class="btn btn-secondary" onclick="exportAllReports()">📥 Экспорт JSON</button>
+            <button class="btn btn-primary" onclick="refreshAllReports()">🔄 Обновить все</button>
+        </div>
+    </div>
+
+    <div class="report-tabs">
+        <button class="tab-btn active" onclick="switchTab('sales')">Продажи</button>
+        <button class="tab-btn" onclick="switchTab('products')">Товары</button>
+        <button class="tab-btn" onclick="switchTab('customers')">Клиенты</button>
+        <button class="tab-btn" onclick="switchTab('financial')">Финансы</button>
+    </div>
+
+    <div id="salesTab" class="tab-content active">
+        <div class="report-card">
+            <div class="report-header">
+                <h3>Динамика продаж по месяцам</h3>
+                <div class="report-controls">
+                    <select id="salesYear" onchange="loadMonthlySales()">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026" selected>2026</option>
+
+                    </select>
+                    <button class="btn btn-secondary" onclick="loadMonthlySales()">Обновить</button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="monthlySalesChart"></canvas>
+            </div>
+        </div>
+
+        <div class="report-card">
+            <div class="report-header">
+                <h3>Заказы по статусам</h3>
+                <button class="btn btn-secondary" onclick="loadOrdersByStatus()">Обновить</button>
+            </div>
+            <div class="chart-container">
+                <canvas id="ordersStatusChart"></canvas>
+            </div>
+        </div>
+
+        <div class="report-card">
+            <div class="report-header">
+                <h3>Топ-10 продаваемых товаров</h3>
+                <button class="btn btn-secondary" onclick="loadTopProducts()">Обновить</button>
+            </div>
+            <div id="topProductsTable">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="productsTab" class="tab-content">
+        <div class="report-card">
+            <div class="report-header">
+                <h3>Статистика по категориям товаров</h3>
+                <button class="btn btn-secondary" onclick="loadCategoryStats()">Обновить</button>
+            </div>
+            <div class="chart-container">
+                <canvas id="categoryChart"></canvas>
+            </div>
+            <div id="categoryStatsTable">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+
+        <div class="report-card">
+            <div class="report-header">
+                <h3>Товары с низким остатком (&lt;10 шт)</h3>
+                <button class="btn btn-secondary" onclick="loadLowStockProducts()">Обновить</button>
+            </div>
+            <div id="lowStockTable">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+
+        <div class="report-card">
+            <div class="report-header">
+                <h3>Поиск товаров по цене</h3>
+                <div class="report-controls">
+                    <input type="number" id="priceRangeMin" placeholder="Мин. цена">
+                    <input type="number" id="priceRangeMax" placeholder="Макс. цена">
+                    <button class="btn btn-primary" onclick="searchByPriceRange()">Поиск</button>
+                </div>
+            </div>
+            <div id="priceRangeTable">
+                <div class="loading">Введите диапазон цен</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="customersTab" class="tab-content">
+        <div class="report-card">
+            <div class="report-header">
+                <h3>Топ-10 покупателей</h3>
+                <button class="btn btn-secondary" onclick="loadTopCustomers()">Обновить</button>
+            </div>
+            <div id="topCustomersTable">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+
+        <div class="report-card">
+            <div class="report-header">
+                <h3>Статистика по пользователю</h3>
+                <div class="report-controls">
+                    <input type="number" id="userIdSearch" placeholder="ID пользователя">
+                    <button class="btn btn-primary" onclick="loadUserStats()">Показать</button>
+                </div>
+            </div>
+            <div id="userStatsContainer">
+                <div class="loading">Введите ID пользователя</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="financialTab" class="tab-content">
+        <div class="stats-grid" id="financialStats">
+            <div class="stat-box">
+                <div class="label">Общая выручка</div>
+                <div class="value" id="totalRevenue">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">Средний чек</div>
+                <div class="value" id="avgOrderValue">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">Всего заказов</div>
+                <div class="value" id="totalOrdersCount">-</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">Общая стоимость товаров</div>
+                <div class="value" id="totalInventoryValue">-</div>
+            </div>
+        </div>
+
+        <div class="report-card">
+            <div class="report-header">
+                <h3>Заказы за период</h3>
+                <div class="report-controls">
+                    <input type="date" id="dateRangeStart">
+                    <input type="date" id="dateRangeEnd">
+                    <button class="btn btn-primary" onclick="loadOrdersByDateRange()">Показать</button>
+                </div>
+            </div>
+            <div id="dateRangeOrdersTable">
+                <div class="loading">Выберите период</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let monthlySalesChart, ordersStatusChart, categoryChart;
+
+    async function loadMonthlySales() {
+        const year = document.getElementById('salesYear').value;
+        try {
+            const response = await fetch(`/report/orders/monthly?year=${year}`);
+            const data = await response.json();
+
+            const months = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+            const salesData = new Array(12).fill(0);
+
+            data.forEach(item => {
+                salesData[item._id - 1] = item.monthlyRevenue || 0;
+            });
+
+            if (monthlySalesChart) monthlySalesChart.destroy();
+            const ctx = document.getElementById('monthlySalesChart').getContext('2d');
+            monthlySalesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Выручка (₽)',
+                        data: salesData,
+                        borderColor: '#000000',
+                        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `${ctx.raw.toLocaleString()} ₽`
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error loading monthly sales:', error);
+        }
+    }
+
+    async function loadOrdersByStatus() {
+        try {
+            const response = await fetch('/report/orders/status');
+            const data = await response.json();
+
+            const labels = data.map(item => item._id);
+            const counts = data.map(item => item.count);
+
+            if (ordersStatusChart) ordersStatusChart.destroy();
+            const ctx = document.getElementById('ordersStatusChart').getContext('2d');
+            ordersStatusChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Количество заказов',
+                        data: counts,
+                        backgroundColor: '#000000',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+        } catch (error) {
+            console.error('Error loading orders by status:', error);
+        }
+    }
+
+    async function loadTopProducts() {
+        try {
+            const response = await fetch('/report/products/top/10');
+            const data = await response.json();
+            const container = document.getElementById('topProductsTable');
+
+            if (!data.length) {
+                container.innerHTML = '<div class="loading">Нет данных</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Товар</th><th>SKU</th><th>Категория</th><th>Продано</th><th>Выручка</th></tr>
+                    </thead>
+                    <tbody>
+                        ${data.map(item => `
+                            <tr>
+                                <td>${item.productName}</td>
+                                <td>${item.sku}</td>
+                                <td>${item.category}</td>
+                                <td>${item.quantitySold}</td>
+                                <td>${(item.revenue || 0).toLocaleString()} ₽</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (error) {
+            console.error('Error loading top products:', error);
+        }
+    }
+
+    async function loadCategoryStats() {
+        try {
+            const response = await fetch('/report/product/category');
+            const data = await response.json();
+
+            const labels = data.map(item => item._id);
+            const counts = data.map(item => item.productCount);
+
+            if (categoryChart) categoryChart.destroy();
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            categoryChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: ['#000000', '#333333', '#666666', '#999999', '#cccccc']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+
+            const container = document.getElementById('categoryStatsTable');
+            container.innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Категория</th><th>Кол-во</th><th>Ср. цена</th><th>Общая стоимость</th></tr>
+                    </thead>
+                    <tbody>
+                        ${data.map(item => `
+                            <tr>
+                                <td>${item._id}</td>
+                                <td>${item.productCount}</td>
+                                <td>${(item.averagePrice || 0).toLocaleString()} ₽</td>
+                                <td>${(item.totalValue || 0).toLocaleString()} ₽</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (error) {
+            console.error('Error loading category stats:', error);
+        }
+    }
+
+    async function loadLowStockProducts() {
+        try {
+            const response = await fetch('/report/products/price-range?min=0&max=1000000');
+            const products = await response.json();
+            const lowStock = products.filter(p => p.stock < 10);
+            const container = document.getElementById('lowStockTable');
+
+            if (!lowStock.length) {
+                container.innerHTML = '<div class="loading">Товаров с низким остатком нет</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="data-table">
+                    <thead><tr><th>Название</th><th>SKU</th><th>Остаток</th><th>Цена</th></tr></thead>
+                    <tbody>
+                        ${lowStock.map(p => `
+                            <tr><td>${p.name}</td><td>${p.sku}</td><td class="stock-low">${p.stock} шт.</td><td>${p.price} ₽</td></tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (error) {
+            console.error('Error loading low stock products:', error);
+        }
+    }
+
+    async function searchByPriceRange() {
+        const min = document.getElementById('priceRangeMin').value || 0;
+        const max = document.getElementById('priceRangeMax').value || 1000000;
+        try {
+            const response = await fetch(`/report/products/price-range?min=${min}&max=${max}`);
+            const products = await response.json();
+            const container = document.getElementById('priceRangeTable');
+
+            if (!products.length) {
+                container.innerHTML = '<div class="loading">Товары не найдены</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="data-table">
+                    <thead><tr><th>Название</th><th>Категория</th><th>Цена</th><th>Остаток</th></tr></thead>
+                    <tbody>
+                        ${products.map(p => `
+                            <tr><td>${p.name}</td><td>${p.category}</td><td>${p.price} ₽</td><td>${p.stock} шт.</td></tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (error) {
+            console.error('Error searching by price range:', error);
+        }
+    }
+
+    async function loadTopCustomers() {
+        try {
+            const response = await fetch('/report/customers/top/10');
+            const data = await response.json();
+            const container = document.getElementById('topCustomersTable');
+
+            if (!data.length) {
+                container.innerHTML = '<div class="loading">Нет данных</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="data-table">
+                    <thead><tr><th>ID пользователя</th><th>Заказов</th><th>Потрачено</th><th>Ср. чек</th></tr></thead>
+                    <tbody>
+                        ${data.map(item => `
+                            <tr>
+                                <td>${item._id}</td>
+                                <td>${item.orderCount}</td>
+                                <td>${(item.totalSpent || 0).toLocaleString()} ₽</td>
+                                <td>${(item.averageOrder || 0).toLocaleString()} ₽</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (error) {
+            console.error('Error loading top customers:', error);
+        }
+    }
+
+    async function loadUserStats() {
+        const userId = document.getElementById('userIdSearch').value;
+        if (!userId) return;
+        try {
+            const response = await fetch(`/report/user-orders/${userId}`);
+            const data = await response.json();
+            const container = document.getElementById('userStatsContainer');
+
+            container.innerHTML = `
+                <div class="stats-grid" style="margin-bottom: 15px;">
+                    <div class="stat-box"><div class="label">Всего заказов</div><div class="value">${data.totalOrders}</div></div>
+                    <div class="stat-box"><div class="label">Потрачено</div><div class="value">${(data.totalSpent || 0).toLocaleString()} ₽</div></div>
+                    <div class="stat-box"><div class="label">Ср. чек</div><div class="value">${(data.averageOrderValue || 0).toLocaleString()} ₽</div></div>
+                </div>
+                <h4>Заказы пользователя:</h4>
+                <table class="data-table">
+                    <thead><tr><th>ID заказа</th><th>Товар</th><th>Кол-во</th><th>Сумма</th><th>Статус</th></tr></thead>
+                    <tbody>
+                        ${(data.orders || []).map(o => `
+                            <tr><td>${o.orderId}</td><td>${o.productSku}</td><td>${o.quantity}</td><td>${o.totalAmount} ₽</td><td>${o.status}</td></tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (error) {
+            console.error('Error loading user stats:', error);
+        }
+    }
+
+    async function loadFinancialStats() {
+        try {
+            const [revenueRes, ordersRes, productsRes] = await Promise.all([
+                fetch('/orders/revenue/total'),
+                fetch('/orders/all'),
+                fetch('/product/all')
+            ]);
+            const revenue = await revenueRes.json();
+            const orders = await ordersRes.json();
+            const products = await productsRes.json();
+
+            document.getElementById('totalRevenue').innerText = (revenue.totalRevenue || 0).toLocaleString() + ' ₽';
+            document.getElementById('totalOrdersCount').innerText = orders.length;
+            const avgOrder = orders.length > 0 ? (revenue.totalRevenue || 0) / orders.length : 0;
+            document.getElementById('avgOrderValue').innerText = avgOrder.toLocaleString() + ' ₽';
+            const totalInventory = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
+            document.getElementById('totalInventoryValue').innerText = totalInventory.toLocaleString() + ' ₽';
+        } catch (error) {
+            console.error('Error loading financial stats:', error);
+        }
+    }
+
+    async function loadOrdersByDateRange() {
+        const start = document.getElementById('dateRangeStart').value;
+        const end = document.getElementById('dateRangeEnd').value;
+        if (!start || !end) return;
+        try {
+            const response = await fetch(`/orders/date-range?start=${start}&end=${end}`);
+            const orders = await response.json();
+            const container = document.getElementById('dateRangeOrdersTable');
+
+            if (!orders.length) {
+                container.innerHTML = '<div class="loading">Заказы не найдены</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="data-table">
+                    <thead><tr><th>ID заказа</th><th>ID пользователя</th><th>Товар</th><th>Сумма</th><th>Статус</th><th>Дата</th></tr></thead>
+                    <tbody>
+                        ${orders.map(o => `
+                            <tr><td>${o.orderId}</td><td>${o.userId}</td><td>${o.productSku}</td><td>${o.totalAmount} ₽</td><td>${o.status}</td><td>${new Date(o.orderDate).toLocaleDateString()}</td></tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (error) {
+            console.error('Error loading orders by date range:', error);
+        }
+    }
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`${tab}Tab`).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    function refreshAllReports() {
+        loadMonthlySales();
+        loadOrdersByStatus();
+        loadTopProducts();
+        loadCategoryStats();
+        loadLowStockProducts();
+        loadTopCustomers();
+        loadFinancialStats();
+    }
+
+    function exportAllReports() {
+        const reports = {
+            monthlySales: { exportDate: new Date().toISOString() },
+            note: "API endpoints ready for integration"
+        };
+        const dataStr = JSON.stringify(reports, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `reports_${new Date().toISOString().slice(0, 19)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    async function logout() {
+        await fetch('/auth/logout', { method: 'POST' });
+        window.location.href = '/login';
+    }
+
+    loadMonthlySales();
+    loadOrdersByStatus();
+    loadTopProducts();
+    loadCategoryStats();
+    loadLowStockProducts();
+    loadTopCustomers();
+    loadFinancialStats();
+</script>
+</body>
+</html>

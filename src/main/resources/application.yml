@@ -3,6 +3,9 @@ spring:
     mongodb:
       uri: mongodb://admin:admin123@localhost:27017/mydb?authSource=mydb
       auto-index-creation: true
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
 
 server:
   port: 8082

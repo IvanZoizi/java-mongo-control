@@ -19,17 +19,15 @@ public class ViewController {
             model.addAttribute("role", session.getAttribute("Role"));
             return "dashboard";
         }
-        return "login123123";
+        return "login";
     }
 
-    @GetMapping("/login123123")
+    @GetMapping("/login")
     public String loginPage(HttpSession session) {
-        log.info("Hello login");
-        System.out.println("Hello login");
         if (session.getAttribute("Login") != null) {
             return "redirect:/";
         }
-        return "forward:/login.html";
+        return "login";
     }
 
     @GetMapping("/dashboard")
